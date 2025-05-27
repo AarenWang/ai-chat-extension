@@ -19,21 +19,51 @@
 
 .chatgpt-outline-toggle {
     position: fixed;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-    background-color: #10a37f;
-    color: white;
-    padding: 10px;
+    right: 20px;
+    top: 20px;
+    width: 40px;
+    height: 40px;
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    border-radius: 4px 0 0 4px;
-    z-index: 10001;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.2s;
+    font-size: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    z-index: 10000;
 }
 
 .chatgpt-outline-toggle:hover {
-    background-color: #0d8c6d;
+    background: #f5f5f5;
+    transform: scale(1.05);
+}
+
+.chatgpt-outline-toggle.active {
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+}
+
+/* 当面板显示时的按钮样式 */
+.chatgpt-outline-toggle:not(.hidden) {
+    right: 320px; /* 面板宽度 + 间距 */
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+}
+
+/* 关闭按钮特殊样式 */
+.chatgpt-outline-toggle[data-close="true"] {
+    font-size: 16px;
+    color: #666;
+    background: #f5f5f5;
+    border-color: #d0d0d0;
+}
+
+.chatgpt-outline-toggle[data-close="true"]:hover {
+    background: #e5e5e5;
+    color: #333;
 }
 
 .chatgpt-outline-header {

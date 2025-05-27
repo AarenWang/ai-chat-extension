@@ -4,7 +4,16 @@ class ChatGPTOutline {
         this.toggleButton = null;
         this.isVisible = false;
         this.outlineItems = [];
+        // 调试模式开关
+        this.debug = false; // 设置为 true 开启调试日志
         this.init();
+    }
+
+    // 调试日志方法
+    log(...args) {
+        if (this.debug) {
+            console.log('[ChatGPTOutline]', ...args);
+        }
     }
 
     init() {
@@ -18,10 +27,12 @@ class ChatGPTOutline {
         this.setupMutationObserver();
         // 启动元素自愈机制
         this.startElementWatcher();
+        // 监听页面导航
+        this.setupNavigationListener();
     }
 
     createPanel() {
-        console.log('[ChatGPTOutline] 尝试创建面板...');
+        this.log('尝试创建面板...');
         this.panel = document.createElement('div');
         this.panel.className = 'chatgpt-outline-panel hidden';
         this.panel.innerHTML = `
@@ -31,17 +42,17 @@ class ChatGPTOutline {
             <div class="chatgpt-outline-content"></div>
         `;
         document.body.appendChild(this.panel);
-        console.log('[ChatGPTOutline] 面板已添加到 DOM。当前面板元素:', this.panel);
+        this.log('面板已添加到 DOM。当前面板元素:', this.panel);
     }
 
     createToggleButton() {
-        console.log('[ChatGPTOutline] 尝试创建导航按钮...');
+        this.log('尝试创建导航按钮...');
         this.toggleButton = document.createElement('div');
         this.toggleButton.className = 'chatgpt-outline-toggle';
         this.toggleButton.textContent = '📋';
         this.toggleButton.addEventListener('click', () => this.togglePanel());
         document.body.appendChild(this.toggleButton);
-        console.log('[ChatGPTOutline] 导航按钮已添加到 DOM。当前按钮元素:', this.toggleButton);
+        this.log('导航按钮已添加到 DOM。当前按钮元素:', this.toggleButton);
     }
 
     setupMessageListener() {
@@ -86,58 +97,83 @@ class ChatGPTOutline {
         }
     }
 
+    setupNavigationListener() {
+        // 监听 URL 变化
+        let lastUrl = location.href;
+        new MutationObserver(() => {
+            if (location.href !== lastUrl) {
+                lastUrl = location.href;
+                this.log('页面已切换，收起导航面板');
+                this.hidePanel();
+            }
+        }).observe(document, { subtree: true, childList: true });
+    }
+
+    hidePanel() {
+        if (this.isVisible) {
+            this.isVisible = false;
+            this.panel.classList.add('hidden');
+            this.toggleButton.textContent = '📋';
+            this.toggleButton.removeAttribute('data-close');
+        }
+    }
+
     togglePanel() {
         this.isVisible = !this.isVisible;
         this.panel.classList.toggle('hidden', !this.isVisible);
-        this.toggleButton.textContent = this.isVisible ? '❌' : '📋';
-        console.log('[ChatGPTOutline] 面板切换状态:', this.isVisible);
+        
         if (this.isVisible) {
-            console.log('[ChatGPTOutline] 面板已显示，开始刷新大纲...');
+            this.toggleButton.textContent = '❌';
+            this.toggleButton.setAttribute('data-close', 'true');
+            this.log('面板已显示，开始刷新大纲...');
             this.refreshOutline();
+        } else {
+            this.toggleButton.textContent = '📋';
+            this.toggleButton.removeAttribute('data-close');
         }
     }
 
     refreshOutline() {
-        console.log('[ChatGPTOutline] 开始刷新大纲...');
+        this.log('开始刷新大纲...');
         
         // 获取所有对话消息
         const messages = document.querySelectorAll('[data-testid^="conversation-turn-"]');
-        console.log('[ChatGPTOutline] 找到对话消息数量:', messages.length);
-        console.log('[ChatGPTOutline] 对话消息元素:', messages);
+        this.log('找到对话消息数量:', messages.length);
+        this.log('对话消息元素:', messages);
 
         this.outlineItems = [];
 
         messages.forEach((message, index) => {
-            console.log(`[ChatGPTOutline] 处理第 ${index + 1} 条消息:`);
-            console.log('[ChatGPTOutline] 消息元素:', message);
+            this.log(`处理第 ${index + 1} 条消息:`);
+            this.log('消息元素:', message);
             
             // 检查是否是用户消息
             const userMessage = message.querySelector('[data-message-author-role="user"]');
-            console.log('[ChatGPTOutline] 用户消息元素:', userMessage);
+            this.log('用户消息元素:', userMessage);
             if (!userMessage) {
-                console.log('[ChatGPTOutline] 不是用户消息，跳过');
+                this.log('不是用户消息，跳过');
                 return;
             }
 
-            // 获取消息内容 - 更新选择器以匹配当前DOM结构
+            // 获取消息内容
             const content = userMessage.querySelector('.whitespace-pre-wrap');
-            console.log('[ChatGPTOutline] 消息内容元素:', content);
+            this.log('消息内容元素:', content);
             if (!content) {
-                console.log('[ChatGPTOutline] 未找到消息内容，跳过');
+                this.log('未找到消息内容，跳过');
                 return;
             }
 
             // 获取消息文本
             const text = this.extractMessageText(content);
-            console.log('[ChatGPTOutline] 提取的文本:', text);
+            this.log('提取的文本:', text);
             if (!text) {
-                console.log('[ChatGPTOutline] 文本为空，跳过');
+                this.log('文本为空，跳过');
                 return;
             }
 
             // 获取消息时间戳（如果有）
             const timestamp = this.extractTimestamp(message);
-            console.log('[ChatGPTOutline] 时间戳:', timestamp);
+            this.log('时间戳:', timestamp);
 
             this.outlineItems.push({
                 index,
@@ -145,11 +181,11 @@ class ChatGPTOutline {
                 timestamp,
                 element: message
             });
-            console.log('[ChatGPTOutline] 已添加到大纲项');
+            this.log('已添加到大纲项');
         });
 
-        console.log('[ChatGPTOutline] 最终大纲项数量:', this.outlineItems.length);
-        console.log('[ChatGPTOutline] 大纲项内容:', this.outlineItems);
+        this.log('最终大纲项数量:', this.outlineItems.length);
+        this.log('大纲项内容:', this.outlineItems);
 
         this.renderOutline();
     }
@@ -249,7 +285,7 @@ class ChatGPTOutline {
         setInterval(() => {
             // 检查面板是否还在 DOM 中
             if (!document.body.contains(this.panel)) {
-                console.log('[ChatGPTOutline] 面板丢失，重新创建...');
+                this.log('面板丢失，重新创建...');
                 this.createPanel();
                 // 重新渲染大纲内容
                 this.renderOutline();
@@ -260,11 +296,12 @@ class ChatGPTOutline {
             }
             // 检查按钮是否还在 DOM 中
             if (!document.body.contains(this.toggleButton)) {
-                console.log('[ChatGPTOutline] 导航按钮丢失，重新创建...');
+                this.log('导航按钮丢失，重新创建...');
                 this.createToggleButton();
                 // 保持按钮状态
                 if (this.isVisible) {
                     this.toggleButton.textContent = '❌';
+                    this.toggleButton.setAttribute('data-close', 'true');
                 }
             }
         }, 1000); // 每秒检查一次
