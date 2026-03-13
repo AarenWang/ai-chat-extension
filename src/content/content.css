@@ -66,6 +66,28 @@
     color: #333;
 }
 
+/* 拖动中样式 */
+.chatgpt-outline-toggle.dragging {
+    background: #10a37f !important;
+    border-color: #10a37f !important;
+    color: white !important;
+    cursor: move !important;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(16, 163, 127, 0.4);
+}
+
+/* 淡入动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
 .chatgpt-outline-header {
     padding: 15px;
     border-bottom: 1px solid #eee;
